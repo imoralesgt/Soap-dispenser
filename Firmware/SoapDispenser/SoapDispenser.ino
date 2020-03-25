@@ -1,7 +1,7 @@
 #include <Servo.h>
 #include <Ultrasonic.h>
 
-#define DEBUG_MODE 1
+//#define DEBUG_MODE 1
 
 #define SERVO_OUTPUT        2
 #define ULTRASONIC_TRIGGER  12
@@ -10,9 +10,9 @@
 #define LED_B               7
 
 #define SERVO_MIN 0   //IRM Initial servo degrees
-#define SERVO_MAX 40  //IRM Max servo rotation degrees
+#define SERVO_MAX 37  //IRM Max servo rotation degrees
 
-#define DELAY_SERVO 100 //IRM pause between servo movements (SERVO_MIN, SERVO_MAX)
+#define DELAY_SERVO 300 //IRM pause between servo movements (SERVO_MIN, SERVO_MAX)
 
 
 //IRM pause (miliseconds) between gesture detection
@@ -23,12 +23,12 @@
 #define GESTURE_DETECTION_ATTEMPTS 5
 
 //IRM delay (miliseconds) between gesture detection events 
-#define DELAY_BETWEEN_DETECTION_ATTEMPTS 100  
+#define DELAY_BETWEEN_DETECTION_ATTEMPTS 150  
 
 
 
 //IRM range within a gesture is detected
-#define MIN_GESTURE_DIST 10
+#define MIN_GESTURE_DIST 6
 #define MAX_GESTURE_DIST 30
 
 //IRM how many times the soap should be poured onto the hands
@@ -110,24 +110,39 @@ IRM Detects whether a gesture has been triggered by the user or not
 unsigned int detectGesture(void){
   unsigned int event = 0;
   unsigned int dist = 0;
+  unsigned int inRange = 0;
 
-  unsigned int i = GESTURE_DETECTION_ATTEMPTS;
+  unsigned int i;
 
   delay(DELAY_BETWEEN_GESTURES); //IRM Avoids multiple triggers within a short time range
   
-  while(!event){ //IRM keeps waiting until a gesture is detected
-    dist = computeDistance();
+  while(event < 1){ //IRM keeps waiting until a gesture is detected
     digitalWrite(LED_A, 0); //IRM no individual gestures detected yet
     digitalWrite(LED_B, 0);
     //IRM measure "GESTURE_DETECTION_ATTEMPTS" times while a valid range is detected
     //IRM if an invalid range is detected, no trigger is sent. Otherwise, a (int)1 is returned
-    while(withinRange(dist, MIN_GESTURE_DIST, MAX_GESTURE_DIST) && i--){
+    dist = computeDistance();
+    inRange = withinRange(dist, MIN_GESTURE_DIST, MAX_GESTURE_DIST);
+    i = GESTURE_DETECTION_ATTEMPTS;
+    while((inRange) && (i)){
+      dist = computeDistance();
+      inRange = withinRange(dist, MIN_GESTURE_DIST, MAX_GESTURE_DIST);
+      if(inRange){
+        i--;
+      }
       digitalWrite(LED_A, 1); //IRM Warn the user a gesture is being detected
+      #ifdef DEBUG_MODE
+        Serial.print("i =");
+        Serial.println(i);
+      #endif
       delay(DELAY_BETWEEN_DETECTION_ATTEMPTS);
     }
 
-    if(!i){ //IRM if the prior loop happened the expected times, a valid event is detected
+    if(i < 1){ //IRM if the prior loop ran the expected times, a valid event is detected
       event = 1;   
+      #ifdef DEBUG_MODE
+        Serial.println("Event!");
+      #endif      
       digitalWrite(LED_B, 1); //IRM A valid event detected. Pouring soap soon.   
     }
     
@@ -157,6 +172,11 @@ and the other way around. It's done only once.
 ===================================================================
 */
 void pourSoap(void){
+
+  #ifdef DEBUG_MODE
+    Serial.println("Pouring soap!");
+  #endif
+  
   servoMotor.write(SERVO_MIN);
   delay(DELAY_SERVO);
   servoMotor.write(SERVO_MAX);
