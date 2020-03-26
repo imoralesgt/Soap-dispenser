@@ -6,18 +6,18 @@
 #define SERVO_OUTPUT        2
 #define ULTRASONIC_TRIGGER  12
 #define ULTRASONIC_ECHO     13
-#define LED_A               6
-#define LED_B               7
+#define LED_A               10
+#define LED_B               11
 
 #define SERVO_MIN 0   //IRM Initial servo degrees
-#define SERVO_MAX 37  //IRM Max servo rotation degrees
+#define SERVO_MAX 40  //IRM Max servo rotation degrees
 
-#define DELAY_SERVO 300 //IRM pause between servo movements (SERVO_MIN, SERVO_MAX)
+#define DELAY_SERVO 400 //IRM pause between servo movements (SERVO_MIN, SERVO_MAX)
 
 
 //IRM pause (miliseconds) between gesture detection
 //Avoids false positive triggers
-#define DELAY_BETWEEN_GESTURES 500
+#define DELAY_BETWEEN_GESTURES 600
 
 //IRM how many times a gesture is checked before triggering an event
 #define GESTURE_DETECTION_ATTEMPTS 5
@@ -28,8 +28,8 @@
 
 
 //IRM range within a gesture is detected
-#define MIN_GESTURE_DIST 6
-#define MAX_GESTURE_DIST 30
+#define MIN_GESTURE_DIST 5
+#define MAX_GESTURE_DIST 10
 
 //IRM how many times the soap should be poured onto the hands
 #define POURING_TIMES 3
@@ -142,7 +142,8 @@ unsigned int detectGesture(void){
       event = 1;   
       #ifdef DEBUG_MODE
         Serial.println("Event!");
-      #endif      
+      #endif     
+      digitalWrite(LED_A, 0); //IRM We already know an event has been triggered 
       digitalWrite(LED_B, 1); //IRM A valid event detected. Pouring soap soon.   
     }
     
